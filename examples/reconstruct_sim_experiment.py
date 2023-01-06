@@ -8,13 +8,15 @@ import pickle
 import tifffile
 from pathlib import Path
 import matplotlib
+import os
 matplotlib.use("TkAgg")
 import mcsim.analysis.sim_reconstruction as sim
 from localize_psf import fit_psf, affine, rois
 
 tstamp = datetime.datetime.now().strftime('%Y_%m_%d_%H;%M;%S')
 root_dir = Path("data")
-fname_raw_data = root_dir / "argosim_line_pairs.tif"
+root_dir = os.path.join(Path(__file__).resolve().parent, 'data')
+fname_raw_data = os.path.join(root_dir, "argosim_line_pairs.tif")
 
 use_gpu = False
 
@@ -46,7 +48,7 @@ excitation_wavelengths = [0.465, 0.532]
 # ############################################
 # load OTF data
 # ############################################
-otf_data_path = root_dir / "2020_05_19_otf_fit_blue.pkl"
+otf_data_path = os.path.join(root_dir, "2020_05_19_otf_fit_blue.pkl")
 
 with open(otf_data_path, 'rb') as f:
     otf_data = pickle.load(f)
@@ -57,8 +59,8 @@ def otf_fn(f, fmax): return 1 / (1 + (f / fmax * otf_p[0]) ** 2) * fit_psf.circ_
 # ############################################
 # load affine transformations from DMD to camera
 # ############################################
-affine_fnames = [root_dir / "2021-02-03_09;43;06_affine_xform_blue_z=0.pkl",
-                 root_dir / "2021-02-03_09;43;06_affine_xform_green_z=0.pkl"]
+affine_fnames = [os.path.join(root_dir, "2021-02-03_09;43;06_affine_xform_blue_z=0.pkl"),
+                 os.path.join(root_dir, "2021-02-03_09;43;06_affine_xform_green_z=0.pkl")]
 
 affine_xforms = []
 for p in affine_fnames:
@@ -68,8 +70,8 @@ for p in affine_fnames:
 # ############################################
 # load DMD pattern information
 # ############################################
-dmd_pattern_data_fpath = [root_dir / "sim_patterns_period=6.01_nangles=3.pkl",
-                          root_dir / "sim_patterns_period=6.82_nangles=3.pkl"]
+dmd_pattern_data_fpath = [os.path.join(root_dir, "sim_patterns_period=6.01_nangles=3.pkl"),
+                          os.path.join(root_dir, "sim_patterns_period=6.82_nangles=3.pkl")]
 
 frqs_dmd = np.zeros((2, 3, 2))
 phases_dmd = np.zeros((ncolors, nangles, nphases))
@@ -125,7 +127,7 @@ for kk in range(ncolors):
     # ###########################################
     # initialize SIM reconstruction
     # ###########################################
-    save_dir = root_dir / f"{tstamp:s}_sim_reconstruction_{excitation_wavelengths[kk] * 1e3:.0f}nm"
+    save_dir = os.path.join(root_dir, f"{tstamp:s}_sim_reconstruction_{excitation_wavelengths[kk] * 1e3:.0f}nm")
 
     imgset = sim.SimImageSet({"pixel_size": pixel_size, "na": na, "wavelength": emission_wavelengths[kk]},
                              imgs[kk, :, :, roi[0]:roi[1], roi[2]:roi[3]],

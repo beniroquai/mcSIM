@@ -37,11 +37,16 @@ from localize_psf import rois, fit_psf, camera
 _cupy_available = True
 try:
     import cupy as cp
-    from cucim.skimage.exposure import match_histograms as match_histograms_gpu
 except ImportError:
     cp = np
     _cupy_available = False
 
+_cucim_available = True
+try:
+    # not available for windows
+    from cucim.skimage.exposure import match_histograms as match_histograms_gpu
+except ImportError:
+    _cucim_available = False
 
 array = Union[np.ndarray, cp.ndarray]
 
@@ -70,6 +75,7 @@ class SimImageSet:
                  min_p2nr: float = 1.,
                  trim_negative_values: bool = False,
                  use_gpu: bool = _cupy_available,
+                 use_cucimgpu: bool = _cucim_available,
                  print_to_terminal: bool = True):
         """
         Reconstruct raw SIM data into widefield, SIM-SR, SIM-OS, and deconvolved images using the Wiener filter
@@ -155,6 +161,7 @@ class SimImageSet:
         self.max_phase_error = max_phase_err
         self.min_p2nr = min_p2nr
         self.use_gpu = use_gpu
+        self.use_cucimgpu = use_cucimgpu
         self.trim_negative_values = trim_negative_values
         # self.upsample_widefield = upsample_widefield
         # if self.upsample_widefield:
@@ -185,9 +192,12 @@ class SimImageSet:
             cp.fft._cache.PlanCache(memsize=0)
 
             xp = cp
-            match_histograms = match_histograms_gpu
         else:
             xp = np
+            
+        if self.use_cucimgpu:
+            match_histograms = match_histograms_gpu
+        else:
             match_histograms = match_histograms_cpu
 
         # #############################################
